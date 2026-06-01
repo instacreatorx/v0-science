@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Article } from "@/components/blog/article-card";
 import { Button } from "@/components/ui/button";
 
@@ -30,9 +31,10 @@ const authorBios: Record<string, { bio: string; followers: string }> = {
   },
 };
 
-export function AuthorCard({ article }: AuthorCardProps) {
+export async function AuthorCard({ article }: AuthorCardProps) {
+  const t = await getTranslations("common");
   const authorInfo = authorBios[article.author.name] || {
-    bio: "Writer and thinker exploring ideas that matter.",
+    bio: t("defaultAuthorBio"),
     followers: "5.2K",
   };
 
@@ -53,28 +55,20 @@ export function AuthorCard({ article }: AuthorCardProps) {
           <div className="mb-1 flex items-center justify-between">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Written by
+                {t("writtenBy")}
               </p>
-              <Link 
-                href="#" 
-                className="text-lg font-bold text-foreground hover:underline"
-              >
+              <Link href="#" className="text-lg font-bold text-foreground hover:underline">
                 {article.author.name}
               </Link>
             </div>
-            <Button 
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              size="sm"
-            >
-              Follow
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" size="sm">
+              {t("follow")}
             </Button>
           </div>
           <p className="mb-2 text-sm text-muted-foreground">
-            {authorInfo.followers} Followers
+            {authorInfo.followers} {t("followers")}
           </p>
-          <p className="text-foreground">
-            {authorInfo.bio}
-          </p>
+          <p className="text-foreground">{authorInfo.bio}</p>
         </div>
       </div>
     </div>

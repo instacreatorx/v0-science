@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { articles, featuredArticle, articleContent } from "@/lib/articles-data";
 import { ArticleHeader } from "@/components/blog/article-header";
 import { ArticleContent } from "@/components/blog/article-content";
@@ -12,17 +13,20 @@ interface ArticlePageProps {
 
 export async function generateMetadata({ params }: ArticlePageProps) {
   const { id } = await params;
+  const t = await getTranslations("metadata");
   const allArticles = [featuredArticle, ...articles];
   const article = allArticles.find((a) => a.id === id);
 
   if (!article) {
     return {
-      title: "Article Not Found",
+      title: t("articleNotFound"),
     };
   }
 
+  const tCommon = await getTranslations("common");
+
   return {
-    title: `${article.title} — Thoughts`,
+    title: `${article.title} — ${tCommon("brand")}`,
     description: article.excerpt,
   };
 }
@@ -49,9 +53,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <ArticleContent content={content} />
         <div className="mx-auto max-w-2xl px-4">
           <AuthorCard article={article} />
-          {relatedArticles.length > 0 && (
-            <RelatedArticles articles={relatedArticles} />
-          )}
+          {relatedArticles.length > 0 && <RelatedArticles articles={relatedArticles} />}
         </div>
       </main>
     </div>

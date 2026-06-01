@@ -117,5 +117,28 @@ func Migrate() error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
+	// Additive migrations for phone auth and locale
+	additiveMigrations := []string{
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) UNIQUE`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS locale VARCHAR(10) DEFAULT 'en'`,
+		`ALTER TABLE users ALTER COLUMN email DROP NOT NULL`,
+		`ALTER TABLE users ALTER COLUMN password DROP NOT NULL`,
+		`CREATE TABLE IF NOT EXISTS otp_codes (
+			id SERIAL PRIMARY KEY,
+			phone VARCHAR(20) NOT NULL,
+			code VARCHAR(6) NOT NULL,
+			name VARCHAR(255) DEFAULT '',
+			expires_at TIMESTAMP NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_otp_codes_phone ON otp_codes(phone)`,
+	}
+
+	for _, migration := range additiveMigrations {
+		if _, err := DB.Exec(ctx, migration); err != nil {
+			return fmt.Errorf("failed to run additive migration: %w", err)
+		}
+	}
+
 	return nil
 }

@@ -2,24 +2,26 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const topics = [
-  { id: "for-you", label: "For You", href: "/" },
-  { id: "following", label: "Following", href: "/following" },
-  { id: "featured", label: "Featured", href: "/featured" },
-  { id: "technology", label: "Technology", href: "/topic/technology" },
-  { id: "programming", label: "Programming", href: "/topic/programming" },
-  { id: "data-science", label: "Data Science", href: "/topic/data-science" },
-  { id: "self-improvement", label: "Self Improvement", href: "/topic/self-improvement" },
-  { id: "writing", label: "Writing", href: "/topic/writing" },
-  { id: "productivity", label: "Productivity", href: "/topic/productivity" },
-  { id: "design", label: "Design", href: "/topic/design" },
-];
+const topicIds = [
+  { id: "for-you", key: "forYou", href: "/" },
+  { id: "following", key: "following", href: "/following" },
+  { id: "featured", key: "featured", href: "/featured" },
+  { id: "technology", key: "technology", href: "/topic/technology" },
+  { id: "programming", key: "programming", href: "/topic/programming" },
+  { id: "data-science", key: "dataScience", href: "/topic/data-science" },
+  { id: "self-improvement", key: "selfImprovement", href: "/topic/self-improvement" },
+  { id: "writing", key: "writing", href: "/topic/writing" },
+  { id: "productivity", key: "productivity", href: "/topic/productivity" },
+  { id: "design", key: "design", href: "/topic/design" },
+] as const;
 
 export function TopicNav() {
+  const t = useTranslations("topics");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState("for-you");
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -28,8 +30,10 @@ export function TopicNav() {
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
       const scrollAmount = 200;
+      const isRtl = document.documentElement.dir === "rtl";
+      const multiplier = isRtl ? -1 : 1;
       scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
+        left: direction === "left" ? -scrollAmount * multiplier : scrollAmount * multiplier,
         behavior: "smooth",
       });
     }
@@ -38,8 +42,9 @@ export function TopicNav() {
   const handleScroll = () => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setShowLeftArrow(scrollLeft > 0);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+      const absScroll = Math.abs(scrollLeft);
+      setShowLeftArrow(absScroll > 0);
+      setShowRightArrow(absScroll < scrollWidth - clientWidth - 10);
     }
   };
 
@@ -49,21 +54,22 @@ export function TopicNav() {
         <Button
           variant="ghost"
           size="icon"
-          className="mr-2 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+          className="me-2 h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
         >
           <Plus className="h-4 w-4" />
         </Button>
 
         {showLeftArrow && (
-          <div className="absolute left-12 z-10 flex items-center">
-            <div className="h-full w-12 bg-gradient-to-r from-background to-transparent" />
+          <div className="absolute z-10 flex items-center ltr:left-12 rtl:right-12">
+            <div className="h-full w-12 bg-gradient-to-r from-background to-transparent ltr:block rtl:hidden" />
+            <div className="hidden h-full w-12 bg-gradient-to-l from-background to-transparent ltr:hidden rtl:block" />
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 bg-background text-muted-foreground hover:text-foreground"
               onClick={() => scroll("left")}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
             </Button>
           </div>
         )}
@@ -71,11 +77,11 @@ export function TopicNav() {
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-x-auto scrollbar-hide"
+          className="scrollbar-hide flex-1 overflow-x-auto"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           <nav className="flex items-center gap-1 py-2">
-            {topics.map((topic) => (
+            {topicIds.map((topic) => (
               <Link
                 key={topic.id}
                 href={topic.href}
@@ -87,23 +93,24 @@ export function TopicNav() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {topic.label}
+                {t(topic.key)}
               </Link>
             ))}
           </nav>
         </div>
 
         {showRightArrow && (
-          <div className="absolute right-4 z-10 flex items-center">
+          <div className="absolute z-10 flex items-center ltr:right-4 rtl:left-4">
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 bg-background text-muted-foreground hover:text-foreground"
               onClick={() => scroll("right")}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             </Button>
-            <div className="h-full w-12 bg-gradient-to-l from-background to-transparent" />
+            <div className="h-full w-12 bg-gradient-to-l from-background to-transparent ltr:block rtl:hidden" />
+            <div className="hidden h-full w-12 bg-gradient-to-r from-background to-transparent ltr:hidden rtl:block" />
           </div>
         )}
       </div>

@@ -54,6 +54,8 @@ func main() {
 		// Auth routes
 		auth := api.Group("/auth")
 		{
+			auth.POST("/send-otp", handlers.SendOTP)
+			auth.POST("/verify-otp", handlers.VerifyOTP)
 			auth.POST("/register", handlers.Register)
 			auth.POST("/login", handlers.Login)
 		}

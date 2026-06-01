@@ -1,16 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 
-const topics = [
-  "Technology",
-  "Self Improvement",
-  "Writing",
-  "Relationships",
-  "Machine Learning",
-  "Productivity",
-  "Politics",
-];
+const topicKeys = [
+  "technology",
+  "selfImprovement",
+  "writing",
+  "relationships",
+  "machineLearning",
+  "productivity",
+  "politics",
+] as const;
 
 const recommendedAuthors = [
   {
@@ -36,56 +37,50 @@ const recommendedAuthors = [
   },
 ];
 
-export function Sidebar() {
+export async function Sidebar() {
+  const t = await getTranslations("sidebar");
+  const tTopics = await getTranslations("topics");
+  const tCommon = await getTranslations("common");
+
   return (
     <aside className="hidden lg:block lg:w-80 lg:shrink-0">
       <div className="sticky top-20 space-y-8">
-        {/* Membership CTA */}
         <div className="rounded-lg border border-border bg-card p-5">
           <h3 className="mb-2 font-serif text-lg font-bold text-card-foreground">
-            Get unlimited access
+            {t("membershipTitle")}
           </h3>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Read member-only stories and support writers you love.
-          </p>
+          <p className="mb-4 text-sm text-muted-foreground">{t("membershipDescription")}</p>
           <Button className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-            Become a member
+            {t("becomeMember")}
           </Button>
         </div>
 
-        {/* Recommended Topics */}
         <div>
           <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-foreground">
-            Recommended Topics
+            {t("recommendedTopics")}
           </h3>
           <div className="flex flex-wrap gap-2">
-            {topics.map((topic) => (
+            {topicKeys.map((key) => (
               <Link
-                key={topic}
-                href={`/topic/${topic.toLowerCase().replace(" ", "-")}`}
+                key={key}
+                href={`/topic/${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`}
                 className="rounded-full bg-secondary px-4 py-2 text-sm text-secondary-foreground transition-colors hover:bg-muted"
               >
-                {topic}
+                {tTopics(key)}
               </Link>
             ))}
           </div>
         </div>
 
-        {/* Who to Follow */}
         <div>
           <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-foreground">
-            Who to Follow
+            {t("whoToFollow")}
           </h3>
           <div className="space-y-4">
             {recommendedAuthors.map((author) => (
               <div key={author.id} className="flex items-start gap-3">
                 <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted">
-                  <Image
-                    src={author.avatar}
-                    alt={author.name}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={author.avatar} alt={author.name} fill className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <Link
@@ -96,12 +91,8 @@ export function Sidebar() {
                   </Link>
                   <p className="truncate text-sm text-muted-foreground">{author.bio}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 rounded-full text-xs"
-                >
-                  Follow
+                <Button variant="outline" size="sm" className="shrink-0 rounded-full text-xs">
+                  {tCommon("follow")}
                 </Button>
               </div>
             ))}
@@ -110,32 +101,31 @@ export function Sidebar() {
             href="/explore/authors"
             className="mt-4 block text-sm font-medium text-primary hover:underline"
           >
-            See more suggestions
+            {t("seeMoreSuggestions")}
           </Link>
         </div>
 
-        {/* Footer Links */}
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <Link href="/help" className="hover:text-foreground">
-            Help
+            {t("help")}
           </Link>
           <Link href="/status" className="hover:text-foreground">
-            Status
+            {t("status")}
           </Link>
           <Link href="/about" className="hover:text-foreground">
-            About
+            {t("about")}
           </Link>
           <Link href="/careers" className="hover:text-foreground">
-            Careers
+            {t("careers")}
           </Link>
           <Link href="/blog" className="hover:text-foreground">
-            Blog
+            {t("blog")}
           </Link>
           <Link href="/privacy" className="hover:text-foreground">
-            Privacy
+            {t("privacy")}
           </Link>
           <Link href="/terms" className="hover:text-foreground">
-            Terms
+            {t("terms")}
           </Link>
         </div>
       </div>

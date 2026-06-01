@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Bookmark, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -24,7 +25,9 @@ interface ArticleCardProps {
   variant?: "default" | "featured";
 }
 
-export function ArticleCard({ article, variant = "default" }: ArticleCardProps) {
+export async function ArticleCard({ article, variant = "default" }: ArticleCardProps) {
+  const t = await getTranslations("common");
+
   if (variant === "featured") {
     return (
       <article className="group relative overflow-hidden rounded-lg">
@@ -39,7 +42,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 text-card">
+            <div className="absolute bottom-0 start-0 end-0 p-6 text-card">
               <div className="mb-3 flex items-center gap-2">
                 <div className="relative h-6 w-6 overflow-hidden rounded-full bg-muted">
                   <Image
@@ -52,7 +55,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
                 <span className="text-sm font-medium">{article.author.name}</span>
                 {article.publication && (
                   <>
-                    <span className="text-sm opacity-60">in</span>
+                    <span className="text-sm opacity-60">{t("in")}</span>
                     <span className="text-sm font-medium">{article.publication}</span>
                   </>
                 )}
@@ -60,9 +63,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
               <h2 className="mb-2 font-serif text-2xl font-bold leading-tight md:text-3xl">
                 {article.title}
               </h2>
-              <p className="mb-3 line-clamp-2 text-sm opacity-80 md:text-base">
-                {article.excerpt}
-              </p>
+              <p className="mb-3 line-clamp-2 text-sm opacity-80 md:text-base">{article.excerpt}</p>
               <div className="flex items-center gap-2 text-xs opacity-60">
                 <span>{article.date}</span>
                 <span>·</span>
@@ -71,7 +72,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
                   <>
                     <span>·</span>
                     <span className="rounded bg-card/20 px-1.5 py-0.5 text-[10px] font-medium uppercase">
-                      Member only
+                      {t("memberOnly")}
                     </span>
                   </>
                 )}
@@ -98,7 +99,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
           <span className="text-sm font-medium text-foreground">{article.author.name}</span>
           {article.publication && (
             <>
-              <span className="text-sm text-muted-foreground">in</span>
+              <span className="text-sm text-muted-foreground">{t("in")}</span>
               <span className="text-sm font-medium text-foreground">{article.publication}</span>
             </>
           )}
@@ -120,7 +121,7 @@ export function ArticleCard({ article, variant = "default" }: ArticleCardProps) 
               <>
                 <span>·</span>
                 <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase text-secondary-foreground">
-                  Member only
+                  {t("memberOnly")}
                 </span>
               </>
             )}

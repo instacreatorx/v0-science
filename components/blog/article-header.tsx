@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Article } from "@/components/blog/article-card";
 import { Button } from "@/components/ui/button";
 import { Bookmark, Share, MoreHorizontal, MessageCircle, ThumbsUp } from "lucide-react";
@@ -8,16 +9,16 @@ interface ArticleHeaderProps {
   article: Article;
 }
 
-export function ArticleHeader({ article }: ArticleHeaderProps) {
+export async function ArticleHeader({ article }: ArticleHeaderProps) {
+  const t = await getTranslations("common");
+
   return (
     <header className="mx-auto max-w-3xl px-4 pt-10">
       <h1 className="mb-4 font-serif text-3xl font-bold leading-tight text-foreground md:text-4xl lg:text-5xl">
         {article.title}
       </h1>
-      <p className="mb-6 text-lg text-muted-foreground md:text-xl">
-        {article.excerpt}
-      </p>
-      
+      <p className="mb-6 text-lg text-muted-foreground md:text-xl">{article.excerpt}</p>
+
       <div className="mb-6 flex items-center gap-4">
         <Link href="#" className="shrink-0">
           <div className="relative h-12 w-12 overflow-hidden rounded-full bg-muted">
@@ -31,19 +32,13 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
         </Link>
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Link 
-              href="#" 
-              className="font-medium text-foreground hover:underline"
-            >
+            <Link href="#" className="font-medium text-foreground hover:underline">
               {article.author.name}
             </Link>
             {article.publication && (
               <>
-                <span className="text-muted-foreground">in</span>
-                <Link 
-                  href="#" 
-                  className="font-medium text-foreground hover:underline"
-                >
+                <span className="text-muted-foreground">{t("in")}</span>
+                <Link href="#" className="font-medium text-foreground hover:underline">
                   {article.publication}
                 </Link>
               </>
@@ -57,18 +52,18 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
               <>
                 <span>·</span>
                 <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase text-secondary-foreground">
-                  Member only
+                  {t("memberOnly")}
                 </span>
               </>
             )}
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           className="hidden border-primary text-primary hover:bg-primary hover:text-primary-foreground sm:inline-flex"
         >
-          Follow
+          {t("follow")}
         </Button>
       </div>
 
@@ -84,25 +79,13 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
           </button>
         </div>
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9 text-muted-foreground hover:text-foreground"
-          >
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
             <Bookmark className="h-5 w-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9 text-muted-foreground hover:text-foreground"
-          >
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
             <Share className="h-5 w-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9 text-muted-foreground hover:text-foreground"
-          >
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
             <MoreHorizontal className="h-5 w-5" />
           </Button>
         </div>
@@ -110,13 +93,7 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
 
       {article.image && (
         <div className="relative mb-8 aspect-[16/9] w-full overflow-hidden rounded-sm bg-muted">
-          <Image
-            src={article.image}
-            alt={article.title}
-            fill
-            className="object-cover"
-            priority
-          />
+          <Image src={article.image} alt={article.title} fill className="object-cover" priority />
         </div>
       )}
     </header>

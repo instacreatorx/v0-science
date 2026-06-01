@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "title": "Thoughts — جایی که ایده‌ها صدای خود را پیدا می‌کنند",
+    "description": "پلتفرمی برای ذهن‌های کنجکاو تا بخوانند، بنویسند و ایده‌های مهم را به اشتراک بگذارند.",
+    "articleNotFound": "مقاله یافت نشد"
+  },
+  "common": {
+    "brand": "Thoughts",
+    "in": "در",
+    "memberOnly": "فقط اعضا",
+    "follow": "دنبال کردن",
+    "followers": "دنبال‌کننده",
+    "showMore": "نمایش بیشتر",
+    "writtenBy": "نوشته",
+    "defaultAuthorBio": "نویسنده و متفکری که ایده‌های مهم را بررسی می‌کند."
+  },
+  "header": {
+    "search": "جستجو",
+    "write": "نوشتن",
+    "signIn": "ورود",
+    "signOut": "خروج",
+    "profile": "پروفایل",
+    "settings": "تنظیمات"
+  },
+  "topics": {
+    "forYou": "برای شما",
+    "following": "دنبال‌شده‌ها",
+    "featured": "برگزیده",
+    "technology": "فناوری",
+    "programming": "برنامه‌نویسی",
+    "dataScience": "علم داده",
+    "selfImprovement": "خودسازی",
+    "writing": "نویسندگی",
+    "productivity": "بهره‌وری",
+    "design": "طراحی",
+    "relationships": "روابط",
+    "machineLearning": "یادگیری ماشین",
+    "politics": "سیاست"
+  },
+  "sidebar": {
+    "membershipTitle": "دسترسی نامحدود",
+    "membershipDescription": "داستان‌های ویژه اعضا را بخوانید و از نویسندگانی که دوست دارید حمایت کنید.",
+    "becomeMember": "عضو شوید",
+    "recommendedTopics": "موضوعات پیشنهادی",
+    "whoToFollow": "چه کسانی را دنبال کنید",
+    "seeMoreSuggestions": "پیشنهادات بیشتر",
+    "help": "راهنما",
+    "status": "وضعیت",
+    "about": "درباره",
+    "careers": "فرصت‌های شغلی",
+    "blog": "وبلاگ",
+    "privacy": "حریم خصوصی",
+    "terms": "شرایط"
+  },
+  "home": {
+    "latestArticles": "جدیدترین مقالات"
+  },
+  "article": {
+    "moreFromThoughts": "بیشتر از Thoughts"
+  },
+  "auth": {
+    "signInTitle": "خوش آمدید",
+    "signInSubtitle": "برای ادامه خواندن با شماره تلفن خود وارد شوید",
+    "signUpTitle": "به Thoughts بپیوندید",
+    "signUpSubtitle": "حساب کاربری خود را با شماره تلفن بسازید",
+    "phoneLabel": "شماره تلفن",
+    "phonePlaceholder": "شماره تلفن خود را وارد کنید",
+    "nameLabel": "نام کامل",
+    "namePlaceholder": "نام خود را وارد کنید",
+    "otpLabel": "کد تأیید",
+    "otpPlaceholder": "کد ۶ رقمی را وارد کنید",
+    "sendCode": "ارسال کد",
+    "verifyCode": "تأیید و ادامه",
+    "resendCode": "ارسال مجدد کد",
+    "resendIn": "ارسال مجدد در {seconds} ثانیه",
+    "noAccount": "حساب کاربری ندارید؟",
+    "hasAccount": "قبلاً ثبت‌نام کرده‌اید؟",
+    "signUpLink": "ثبت‌نام",
+    "signInLink": "ورود",
+    "otpSent": "کد تأیید به {phone} ارسال شد",
+    "invalidPhone": "لطفاً یک شماره تلفن معتبر وارد کنید",
+    "invalidOtp": "لطفاً یک کد ۶ رقمی معتبر وارد کنید",
+    "nameRequired": "برای ثبت‌نام نام الزامی است",
+    "authError": "احراز هویت ناموفق بود. لطفاً دوباره تلاش کنید.",
+    "devOtpHint": "حالت توسعه: از کد 123456 استفاده کنید"
+  },
+  "settings": {
+    "title": "تنظیمات",
+    "language": "زبان",
+    "languageDescription": "زبان مورد نظر خود را برای برنامه انتخاب کنید",
+    "save": "ذخیره تغییرات",
+    "saved": "تنظیمات ذخیره شد"
+  }
+}

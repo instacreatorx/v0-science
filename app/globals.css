@@ -125,3 +125,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* RTL-aware scrollbar hide for topic nav */
+[dir="rtl"] .scrollbar-hide {
+  direction: rtl;
+}
+
+/* Flip search icon position in RTL */
+[dir="rtl"] .search-input-icon {
+  @apply start-3 end-auto;
+}
+
+[dir="rtl"] .search-input {
+  @apply ps-9 pe-4;
+}

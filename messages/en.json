@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "title": "Thoughts — Where Ideas Find Their Voice",
+    "description": "A platform for curious minds to read, write, and share ideas that matter.",
+    "articleNotFound": "Article Not Found"
+  },
+  "common": {
+    "brand": "Thoughts",
+    "in": "in",
+    "memberOnly": "Member only",
+    "follow": "Follow",
+    "followers": "Followers",
+    "showMore": "Show more",
+    "writtenBy": "Written by",
+    "defaultAuthorBio": "Writer and thinker exploring ideas that matter."
+  },
+  "header": {
+    "search": "Search",
+    "write": "Write",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "topics": {
+    "forYou": "For You",
+    "following": "Following",
+    "featured": "Featured",
+    "technology": "Technology",
+    "programming": "Programming",
+    "dataScience": "Data Science",
+    "selfImprovement": "Self Improvement",
+    "writing": "Writing",
+    "productivity": "Productivity",
+    "design": "Design",
+    "relationships": "Relationships",
+    "machineLearning": "Machine Learning",
+    "politics": "Politics"
+  },
+  "sidebar": {
+    "membershipTitle": "Get unlimited access",
+    "membershipDescription": "Read member-only stories and support writers you love.",
+    "becomeMember": "Become a member",
+    "recommendedTopics": "Recommended Topics",
+    "whoToFollow": "Who to Follow",
+    "seeMoreSuggestions": "See more suggestions",
+    "help": "Help",
+    "status": "Status",
+    "about": "About",
+    "careers": "Careers",
+    "blog": "Blog",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "home": {
+    "latestArticles": "Latest Articles"
+  },
+  "article": {
+    "moreFromThoughts": "More from Thoughts"
+  },
+  "auth": {
+    "signInTitle": "Welcome back",
+    "signInSubtitle": "Sign in with your phone number to continue reading",
+    "signUpTitle": "Join Thoughts",
+    "signUpSubtitle": "Create your account with your phone number",
+    "phoneLabel": "Phone number",
+    "phonePlaceholder": "Enter your phone number",
+    "nameLabel": "Full name",
+    "namePlaceholder": "Enter your name",
+    "otpLabel": "Verification code",
+    "otpPlaceholder": "Enter 6-digit code",
+    "sendCode": "Send code",
+    "verifyCode": "Verify & continue",
+    "resendCode": "Resend code",
+    "resendIn": "Resend in {seconds}s",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUpLink": "Sign up",
+    "signInLink": "Sign in",
+    "otpSent": "Verification code sent to {phone}",
+    "invalidPhone": "Please enter a valid phone number",
+    "invalidOtp": "Please enter a valid 6-digit code",
+    "nameRequired": "Name is required for sign up",
+    "authError": "Authentication failed. Please try again.",
+    "devOtpHint": "Dev mode: use code 123456"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageDescription": "Choose your preferred language for the app",
+    "save": "Save changes",
+    "saved": "Settings saved"
+  }
+}
