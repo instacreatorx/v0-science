@@ -76,9 +76,10 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-sans, 'Inter'), 'Inter Fallback';
-  --font-serif: var(--font-serif, 'Source Serif 4'), 'Georgia', serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-fa: var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, 'Cascadia Code', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,6 +124,19 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Locale-driven font: html[lang] set server-side from user profile cookie */
+  html[lang='fa'] body {
+    font-family: var(--font-fa);
+  }
+  html[lang='en'] body,
+  html:not([lang='fa']) body {
+    font-family: var(--font-sans);
+  }
+  /* Persian has no Latin serif — use Vazirmatn for headings too */
+  html[lang='fa'] .font-serif,
+  html[lang='fa'] .prose :where(h1, h2, h3, h4, blockquote) {
+    font-family: var(--font-fa);
   }
 }
 

@@ -8,19 +8,19 @@ import './globals.css';
 
 const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
-  variable: '--font-serif',
+  variable: '--font-source-serif',
   display: 'swap',
 });
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-inter',
   display: 'swap',
 });
 
 const vazirmatn = Vazirmatn({
-  subsets: ['arabic'],
-  variable: '--font-fa',
+  subsets: ['arabic', 'latin'],
+  variable: '--font-vazirmatn',
   display: 'swap',
 });
 
@@ -66,7 +66,7 @@ export default async function RootLayout({
       dir={rtl ? 'rtl' : 'ltr'}
       className={`${sourceSerif.variable} ${inter.variable} ${vazirmatn.variable} bg-background`}
     >
-      <body className={`font-sans antialiased ${rtl ? 'font-[family-name:var(--font-fa)]' : ''}`}>
+      <body className="antialiased">
         <Providers locale={locale} messages={messages}>
           {children}
         </Providers>
