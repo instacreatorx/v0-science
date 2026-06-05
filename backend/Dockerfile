@@ -3,11 +3,12 @@ FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# Copy go mod files
-
+# 1. 🛑 REMOVED go.sum from the explicit copy step
 COPY go.mod ./
-RUN go mod tidy
+
+# 2. ✨ ADDED go mod download before tidy to fetch dependencies
 RUN go mod download
+RUN go mod tidy
 
 # Copy source code
 COPY . .
