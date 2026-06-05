@@ -9,15 +9,7 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'standalone',
-  async rewrites() {
-    const backend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-    return [
-      {
-        source: '/api/backend/:path*',
-        destination: `${backend}/api/:path*`,
-      },
-    ];
-  },
+  // API proxy is handled by app/api/backend/[...path]/route.ts (supports POST bodies reliably)
 };
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
