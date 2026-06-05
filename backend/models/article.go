@@ -20,9 +20,9 @@ type Article struct {
 	Content       string         `json:"content"`
 	Image         string         `json:"image,omitempty"`
 	AuthorID      int64          `gorm:"index" json:"author_id"`
-	Author        *User          `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
+	Author        *User          `gorm:"foreignKey:AuthorID;constraint:-" json:"author,omitempty"`
 	TeamID        *int64         `gorm:"index" json:"team_id,omitempty"`
-	Team          *Team          `gorm:"foreignKey:TeamID" json:"team,omitempty"`
+	Team          *Team          `gorm:"foreignKey:TeamID;constraint:-" json:"team,omitempty"`
 	Tags          pq.StringArray `gorm:"type:text[]" json:"tags"`
 	ReadTime      string         `gorm:"default:'5 min read'" json:"read_time"`
 	Status        string         `gorm:"default:draft;index" json:"status"`

@@ -20,7 +20,7 @@ type Team struct {
 	Bio        string     `json:"bio,omitempty"`
 	Avatar     string     `json:"avatar,omitempty"`
 	OwnerID    int64      `gorm:"index" json:"owner_id"`
-	Owner      *User      `gorm:"foreignKey:OwnerID" json:"owner,omitempty"`
+	Owner      *User      `gorm:"foreignKey:OwnerID;constraint:-" json:"owner,omitempty"`
 	VerifiedAt *time.Time `json:"verified_at,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
@@ -31,7 +31,7 @@ type TeamMember struct {
 	ID        int64     `gorm:"primaryKey" json:"id"`
 	TeamID    int64     `gorm:"uniqueIndex:idx_team_member" json:"team_id"`
 	UserID    int64     `gorm:"uniqueIndex:idx_team_member" json:"user_id"`
-	User      *User     `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	User      *User     `gorm:"foreignKey:UserID;constraint:-" json:"user,omitempty"`
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
 }

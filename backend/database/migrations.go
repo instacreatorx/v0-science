@@ -98,6 +98,59 @@ func runSchemaMigrations() error {
 		}
 	}
 
+	// New tables (never use GORM AutoMigrate — it re-migrates users via Team FK)
+	newTables := []string{
+		`CREATE TABLE IF NOT EXISTS refresh_tokens (
+			id SERIAL PRIMARY KEY,
+			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			token_hash VARCHAR(64) NOT NULL UNIQUE,
+			expires_at TIMESTAMP NOT NULL,
+			revoked_at TIMESTAMP,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)`,
+		`CREATE TABLE IF NOT EXISTS teams (
+			id SERIAL PRIMARY KEY,
+			name VARCHAR(255) NOT NULL,
+			slug VARCHAR(255) NOT NULL UNIQUE,
+			bio TEXT DEFAULT '',
+			avatar VARCHAR(500) DEFAULT '',
+			owner_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			verified_at TIMESTAMP,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_teams_owner_id ON teams(owner_id)`,
+		`CREATE TABLE IF NOT EXISTS team_members (
+			id SERIAL PRIMARY KEY,
+			team_id INT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+			user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			role VARCHAR(32) NOT NULL DEFAULT 'writer',
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(team_id, user_id)
+		)`,
+		`CREATE TABLE IF NOT EXISTS team_verification_requests (
+			id SERIAL PRIMARY KEY,
+			team_id INT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+			submitted_by INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			proof_text TEXT NOT NULL,
+			proof_url VARCHAR(500) DEFAULT '',
+			status VARCHAR(32) DEFAULT 'pending',
+			reviewed_by INT REFERENCES users(id) ON DELETE SET NULL,
+			rejection_reason TEXT DEFAULT '',
+			reviewed_at TIMESTAMP,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_team_verification_team_id ON team_verification_requests(team_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_team_verification_status ON team_verification_requests(status)`,
+	}
+	for _, stmt := range newTables {
+		if err := DB.Exec(stmt).Error; err != nil {
+			return fmt.Errorf("new table migration failed: %w\nSQL: %s", err, stmt)
+		}
+	}
+
 	// Phone unique — partial index (nullable phone); skip if legacy users_phone_key exists
 	if err := DB.Exec(`
 		DO $$ BEGIN

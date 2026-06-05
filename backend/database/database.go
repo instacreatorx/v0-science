@@ -2,8 +2,11 @@ package database
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/kubektl/v0-blog-backend/models"
 	"gorm.io/driver/postgres"
@@ -19,9 +22,15 @@ func Connect(dsn string, ginMode string) error {
 		logLevel = logger.Info
 	}
 
+	gormLogger := logger.New(log.New(os.Stdout, "\r\n", log.LstdFlags), logger.Config{
+		SlowThreshold:             2 * time.Second,
+		LogLevel:                  logLevel,
+		IgnoreRecordNotFoundError: true,
+		Colorful:                  true,
+	})
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger:                                   logger.Default.LogMode(logLevel),
-		DisableForeignKeyConstraintWhenMigrating: true,
+		Logger: gormLogger,
 	})
 	if err != nil {
 		return fmt.Errorf("unable to connect to database: %w", err)
@@ -41,22 +50,13 @@ func Close() {
 }
 
 func Migrate() error {
-	// 1. Legacy-safe SQL for tables that already exist on Railway
+	// All schema changes via idempotent SQL — never GORM AutoMigrate on Railway.
+	// AutoMigrate walks related models (Team → User) and breaks legacy unique constraints.
 	if err := runSchemaMigrations(); err != nil {
 		return err
 	}
 
-	// 2. GORM AutoMigrate ONLY for brand-new tables (never managed by legacy SQL)
-	if err := DB.AutoMigrate(
-		&models.RefreshToken{},
-		&models.Team{},
-		&models.TeamMember{},
-		&models.TeamVerificationRequest{},
-	); err != nil {
-		return fmt.Errorf("auto migrate new tables failed: %w", err)
-	}
-
-	// 3. Backfill slugs/status on existing rows, then add slug unique index
+	// Backfill slugs/status on existing rows, then add slug unique index
 	if err := backfillLegacyData(); err != nil {
 		return err
 	}
