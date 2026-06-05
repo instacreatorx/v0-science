@@ -14,13 +14,14 @@ import (
 var DB *gorm.DB
 
 func Connect(dsn string, ginMode string) error {
-	logLevel := logger.Info
-	if ginMode == "release" {
-		logLevel = logger.Warn
+	logLevel := logger.Warn
+	if ginMode != "release" {
+		logLevel = logger.Info
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logLevel),
+		Logger:                                   logger.Default.LogMode(logLevel),
+		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
 		return fmt.Errorf("unable to connect to database: %w", err)
@@ -40,27 +41,34 @@ func Close() {
 }
 
 func Migrate() error {
+	// 1. Legacy-safe SQL for tables that already exist on Railway
+	if err := runSchemaMigrations(); err != nil {
+		return err
+	}
+
+	// 2. GORM AutoMigrate ONLY for brand-new tables (never managed by legacy SQL)
 	if err := DB.AutoMigrate(
-		&models.User{},
-		&models.Article{},
-		&models.Comment{},
-		&models.Like{},
-		&models.Bookmark{},
-		&models.Follow{},
-		&models.OtpCode{},
 		&models.RefreshToken{},
 		&models.Team{},
 		&models.TeamMember{},
 		&models.TeamVerificationRequest{},
 	); err != nil {
-		return fmt.Errorf("auto migrate failed: %w", err)
+		return fmt.Errorf("auto migrate new tables failed: %w", err)
 	}
 
-	return backfillLegacyData()
+	// 3. Backfill slugs/status on existing rows, then add slug unique index
+	if err := backfillLegacyData(); err != nil {
+		return err
+	}
+
+	if err := ensureSlugUniqueIndex(); err != nil {
+		return fmt.Errorf("slug index migration failed: %w", err)
+	}
+
+	return nil
 }
 
 func backfillLegacyData() error {
-	// Existing articles without status/slug get published + generated slug
 	var articles []models.Article
 	if err := DB.Where("slug = '' OR slug IS NULL OR status = '' OR status IS NULL").Find(&articles).Error; err != nil {
 		return err
@@ -87,7 +95,7 @@ func backfillLegacyData() error {
 			}
 			updates["slug"] = slug
 		}
-		if a.Status == models.ArticleStatusPublished && a.PublishedAt == nil {
+		if (a.Status == models.ArticleStatusPublished || updates["status"] == models.ArticleStatusPublished) && a.PublishedAt == nil {
 			t := a.CreatedAt
 			updates["published_at"] = t
 		}
@@ -98,7 +106,6 @@ func backfillLegacyData() error {
 		}
 	}
 
-	// Ensure users have role
 	return DB.Model(&models.User{}).Where("role = '' OR role IS NULL").Update("role", models.RoleUser).Error
 }
 

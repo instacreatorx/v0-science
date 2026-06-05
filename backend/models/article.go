@@ -15,7 +15,7 @@ const (
 type Article struct {
 	ID            int64          `gorm:"primaryKey" json:"id"`
 	Title         string         `json:"title"`
-	Slug          string         `gorm:"uniqueIndex" json:"slug"`
+	Slug          string         `gorm:"uniqueIndex:articles_slug_key" json:"slug"`
 	Excerpt       string         `json:"excerpt"`
 	Content       string         `json:"content"`
 	Image         string         `json:"image,omitempty"`
@@ -33,7 +33,7 @@ type Article struct {
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 
-	LikedByMe     *bool `gorm:"-" json:"liked_by_me,omitempty"`
+	LikedByMe      *bool `gorm:"-" json:"liked_by_me,omitempty"`
 	BookmarkedByMe *bool `gorm:"-" json:"bookmarked_by_me,omitempty"`
 }
 

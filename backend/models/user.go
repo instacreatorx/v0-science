@@ -9,8 +9,8 @@ const (
 
 type User struct {
 	ID        int64     `gorm:"primaryKey" json:"id"`
-	Email     *string   `gorm:"uniqueIndex" json:"email,omitempty"`
-	Phone     *string   `gorm:"uniqueIndex" json:"phone,omitempty"`
+	Email     *string   `gorm:"uniqueIndex:users_email_key" json:"email,omitempty"`
+	Phone     *string   `gorm:"uniqueIndex:users_phone_key" json:"phone,omitempty"`
 	Password  string    `gorm:"column:password" json:"-"`
 	Name      string    `json:"name"`
 	Bio       string    `json:"bio,omitempty"`

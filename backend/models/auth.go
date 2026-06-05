@@ -14,7 +14,7 @@ type OtpCode struct {
 type RefreshToken struct {
 	ID        int64      `gorm:"primaryKey" json:"id"`
 	UserID    int64      `gorm:"index" json:"user_id"`
-	TokenHash string     `gorm:"uniqueIndex" json:"-"`
+	TokenHash string     `gorm:"uniqueIndex:refresh_tokens_token_hash_key" json:"-"`
 	ExpiresAt time.Time  `json:"expires_at"`
 	RevokedAt *time.Time `json:"revoked_at,omitempty"`
 	CreatedAt time.Time  `json:"created_at"`

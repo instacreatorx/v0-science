@@ -14,17 +14,17 @@ const (
 )
 
 type Team struct {
-	ID          int64      `gorm:"primaryKey" json:"id"`
-	Name        string     `json:"name"`
-	Slug        string     `gorm:"uniqueIndex" json:"slug"`
-	Bio         string     `json:"bio,omitempty"`
-	Avatar      string     `json:"avatar,omitempty"`
-	OwnerID     int64      `gorm:"index" json:"owner_id"`
-	Owner       *User      `gorm:"foreignKey:OwnerID" json:"owner,omitempty"`
-	VerifiedAt  *time.Time `json:"verified_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	IsVerified  bool       `gorm:"-" json:"is_verified"`
+	ID         int64      `gorm:"primaryKey" json:"id"`
+	Name       string     `json:"name"`
+	Slug       string     `gorm:"uniqueIndex:teams_slug_key" json:"slug"`
+	Bio        string     `json:"bio,omitempty"`
+	Avatar     string     `json:"avatar,omitempty"`
+	OwnerID    int64      `gorm:"index" json:"owner_id"`
+	Owner      *User      `gorm:"foreignKey:OwnerID" json:"owner,omitempty"`
+	VerifiedAt *time.Time `json:"verified_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+	IsVerified bool       `gorm:"-" json:"is_verified"`
 }
 
 type TeamMember struct {
