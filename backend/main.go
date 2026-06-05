@@ -54,12 +54,11 @@ func main() {
 	authMW := middleware.NewAuthMiddleware(authService)
 
 	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Accept", "Authorization")
 
-	r := gin.New()
-	r.Use(cors.New(corsConfig))
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	r := gin.Default()
+	r.Use(cors.New(corsConfig)) 
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
@@ -128,7 +127,7 @@ func main() {
 		{
 			admin.GET("/verification-requests", h.Admin.ListVerificationRequests)
 			admin.POST("/verification-requests/:id/approve", h.Admin.ApproveVerification)
-			admin.POST("/verification-requests/:id/reject", h.Admin.RejectVerification)
+			admin.POST("/verification-requests/:id/reject", h	.Admin.RejectVerification)
 		}
 	}
 
