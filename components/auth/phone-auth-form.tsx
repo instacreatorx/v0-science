@@ -87,7 +87,7 @@ export function PhoneAuthForm({ mode }: PhoneAuthFormProps) {
           throw new Error(t('authError'));
         }
 
-        login(response.token, response.user);
+        login(response.token, response.refresh_token, response.user);
 
         if (!getAccessToken()) {
           throw new Error(t('authError'));

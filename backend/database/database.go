@@ -1,144 +1,158 @@
 package database
 
 import (
-	"context"
 	"fmt"
-	"os"
+	"regexp"
+	"strings"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kubektl/v0-blog-backend/models"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-var DB *pgxpool.Pool
+var DB *gorm.DB
 
-func Connect() error {
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		return fmt.Errorf("DATABASE_URL environment variable is not set")
+func Connect(dsn string, ginMode string) error {
+	logLevel := logger.Info
+	if ginMode == "release" {
+		logLevel = logger.Warn
 	}
 
-	config, err := pgxpool.ParseConfig(dbURL)
-	if err != nil {
-		return fmt.Errorf("unable to parse database URL: %w", err)
-	}
-
-	DB, err = pgxpool.NewWithConfig(context.Background(), config)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logLevel),
+	})
 	if err != nil {
 		return fmt.Errorf("unable to connect to database: %w", err)
 	}
 
-	// Test the connection
-	if err := DB.Ping(context.Background()); err != nil {
-		return fmt.Errorf("unable to ping database: %w", err)
-	}
-
+	DB = db
 	return nil
 }
 
 func Close() {
 	if DB != nil {
-		DB.Close()
+		sqlDB, err := DB.DB()
+		if err == nil {
+			sqlDB.Close()
+		}
 	}
 }
 
 func Migrate() error {
-	ctx := context.Background()
-
-	schema := `
-	CREATE TABLE IF NOT EXISTS users (
-		id SERIAL PRIMARY KEY,
-		email VARCHAR(255) UNIQUE NOT NULL,
-		password VARCHAR(255) NOT NULL,
-		name VARCHAR(255) NOT NULL,
-		bio TEXT DEFAULT '',
-		avatar VARCHAR(500) DEFAULT '',
-		followers INT DEFAULT 0,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	);
-
-	CREATE TABLE IF NOT EXISTS articles (
-		id SERIAL PRIMARY KEY,
-		title VARCHAR(500) NOT NULL,
-		excerpt TEXT NOT NULL,
-		content TEXT NOT NULL,
-		image VARCHAR(500) DEFAULT '',
-		author_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-		tags TEXT[] DEFAULT '{}',
-		read_time VARCHAR(50) DEFAULT '5 min read',
-		is_member_only BOOLEAN DEFAULT FALSE,
-		likes_count INT DEFAULT 0,
-		comments_count INT DEFAULT 0,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	);
-
-	CREATE TABLE IF NOT EXISTS comments (
-		id SERIAL PRIMARY KEY,
-		article_id INT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
-		user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-		content TEXT NOT NULL,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	);
-
-	CREATE TABLE IF NOT EXISTS likes (
-		id SERIAL PRIMARY KEY,
-		article_id INT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
-		user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		UNIQUE(article_id, user_id)
-	);
-
-	CREATE TABLE IF NOT EXISTS bookmarks (
-		id SERIAL PRIMARY KEY,
-		article_id INT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
-		user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		UNIQUE(article_id, user_id)
-	);
-
-	CREATE TABLE IF NOT EXISTS follows (
-		id SERIAL PRIMARY KEY,
-		follower_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-		following_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		UNIQUE(follower_id, following_id)
-	);
-
-	CREATE INDEX IF NOT EXISTS idx_articles_author_id ON articles(author_id);
-	CREATE INDEX IF NOT EXISTS idx_articles_created_at ON articles(created_at DESC);
-	CREATE INDEX IF NOT EXISTS idx_comments_article_id ON comments(article_id);
-	CREATE INDEX IF NOT EXISTS idx_likes_article_id ON likes(article_id);
-	CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id);
-	`
-
-	_, err := DB.Exec(ctx, schema)
-	if err != nil {
-		return fmt.Errorf("failed to run migrations: %w", err)
+	if err := DB.AutoMigrate(
+		&models.User{},
+		&models.Article{},
+		&models.Comment{},
+		&models.Like{},
+		&models.Bookmark{},
+		&models.Follow{},
+		&models.OtpCode{},
+		&models.RefreshToken{},
+		&models.Team{},
+		&models.TeamMember{},
+		&models.TeamVerificationRequest{},
+	); err != nil {
+		return fmt.Errorf("auto migrate failed: %w", err)
 	}
 
-	// Additive migrations for phone auth and locale
-	additiveMigrations := []string{
-		`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) UNIQUE`,
-		`ALTER TABLE users ADD COLUMN IF NOT EXISTS locale VARCHAR(10) DEFAULT 'en'`,
-		`ALTER TABLE users ALTER COLUMN email DROP NOT NULL`,
-		`ALTER TABLE users ALTER COLUMN password DROP NOT NULL`,
-		`CREATE TABLE IF NOT EXISTS otp_codes (
-			id SERIAL PRIMARY KEY,
-			phone VARCHAR(20) NOT NULL,
-			code VARCHAR(6) NOT NULL,
-			name VARCHAR(255) DEFAULT '',
-			expires_at TIMESTAMP NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		)`,
-		`CREATE INDEX IF NOT EXISTS idx_otp_codes_phone ON otp_codes(phone)`,
+	return backfillLegacyData()
+}
+
+func backfillLegacyData() error {
+	// Existing articles without status/slug get published + generated slug
+	var articles []models.Article
+	if err := DB.Where("slug = '' OR slug IS NULL OR status = '' OR status IS NULL").Find(&articles).Error; err != nil {
+		return err
 	}
 
-	for _, migration := range additiveMigrations {
-		if _, err := DB.Exec(ctx, migration); err != nil {
-			return fmt.Errorf("failed to run additive migration: %w", err)
+	for _, a := range articles {
+		updates := map[string]interface{}{}
+		if a.Status == "" {
+			updates["status"] = models.ArticleStatusPublished
+		}
+		if a.Slug == "" {
+			base := slugify(a.Title)
+			if base == "" {
+				base = fmt.Sprintf("article-%d", a.ID)
+			}
+			slug := base
+			for i := 0; ; i++ {
+				var count int64
+				DB.Model(&models.Article{}).Where("slug = ? AND id != ?", slug, a.ID).Count(&count)
+				if count == 0 {
+					break
+				}
+				slug = fmt.Sprintf("%s-%d", base, i+1)
+			}
+			updates["slug"] = slug
+		}
+		if a.Status == models.ArticleStatusPublished && a.PublishedAt == nil {
+			t := a.CreatedAt
+			updates["published_at"] = t
+		}
+		if len(updates) > 0 {
+			if err := DB.Model(&models.Article{}).Where("id = ?", a.ID).Updates(updates).Error; err != nil {
+				return err
+			}
 		}
 	}
 
-	return nil
+	// Ensure users have role
+	return DB.Model(&models.User{}).Where("role = '' OR role IS NULL").Update("role", models.RoleUser).Error
+}
+
+var slugRegex = regexp.MustCompile(`[^a-z0-9]+`)
+
+func slugify(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	return strings.Trim(slugRegex.ReplaceAllString(s, "-"), "-")
+}
+
+func Slugify(s string) string {
+	return slugify(s)
+}
+
+func UniqueSlug(base string, excludeID int64) (string, error) {
+	base = slugify(base)
+	if base == "" {
+		base = "untitled"
+	}
+	slug := base
+	for i := 0; ; i++ {
+		var count int64
+		q := DB.Model(&models.Article{}).Where("slug = ?", slug)
+		if excludeID > 0 {
+			q = q.Where("id != ?", excludeID)
+		}
+		if err := q.Count(&count).Error; err != nil {
+			return "", err
+		}
+		if count == 0 {
+			return slug, nil
+		}
+		slug = fmt.Sprintf("%s-%d", base, i+1)
+	}
+}
+
+func UniqueTeamSlug(base string, excludeID int64) (string, error) {
+	base = slugify(base)
+	if base == "" {
+		base = "team"
+	}
+	slug := base
+	for i := 0; ; i++ {
+		var count int64
+		q := DB.Model(&models.Team{}).Where("slug = ?", slug)
+		if excludeID > 0 {
+			q = q.Where("id != ?", excludeID)
+		}
+		if err := q.Count(&count).Error; err != nil {
+			return "", err
+		}
+		if count == 0 {
+			return slug, nil
+		}
+		slug = fmt.Sprintf("%s-%d", base, i+1)
+	}
 }

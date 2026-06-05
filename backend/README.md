@@ -1,59 +1,104 @@
 # Medium-like Blog Backend
 
-Go/Gin backend for the Medium-like blog platform.
+Go/Gin backend with GORM, PostgreSQL, SOLID layering, and explicit auth/article state machines.
+
+## Architecture
+
+```
+handlers → services → repositories → GORM/PostgreSQL
+                ↳ services/state (FSM guards)
+```
 
 ## Setup
 
-1. Make sure you have Go 1.21+ installed
-2. Set environment variables:
-   ```
-   DATABASE_URL=your_neon_connection_string
-   JWT_SECRET=your_secret_key
-   PORT=8080
-   ```
+1. Go 1.21+
+2. Environment variables:
 
-3. Run the server:
-   ```bash
-   cd backend
-   go mod tidy
-   go run main.go
-   ```
+```
+DATABASE_URL=postgresql://...
+JWT_SECRET=your_secret_key
+PORT=8080
+CORS_ORIGINS=http://localhost:3000
+GIN_MODE=release
+```
+
+3. Run (when online, run `go mod tidy` once):
+
+```bash
+cd backend
+go run main.go
+```
+
+## Auth state machine
+
+- OTP → access JWT (15 min) + refresh token (30 days, hashed in DB)
+- `POST /api/auth/logout` revokes refresh token
+- `POST /api/auth/refresh` rotates refresh token
+
+## Article state machine
+
+States: `draft` → `published` ↔ `draft`, `archived` → `draft`
+
+- `POST /api/articles` creates a **draft**
+- `POST /api/articles/:id/publish|unpublish|archive` — invalid transitions return `409`
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
+### Auth
+- `POST /api/auth/send-otp`
+- `POST /api/auth/verify-otp` — returns `{ token, refresh_token, user }`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
 
 ### Users
-- `GET /api/users/me` - Get current user (auth required)
-- `PUT /api/users/me` - Update current user (auth required)
-- `GET /api/users/:id` - Get user by ID
-- `GET /api/users/:id/articles` - Get user's articles
-- `POST /api/users/:id/follow` - Follow/unfollow user (auth required)
+- `GET /api/users/me`
+- `PUT /api/users/me`
+- `GET /api/users/:id` — optional auth adds `is_following`
+- `GET /api/users/:id/articles` — published only
+- `POST /api/users/:id/follow`
 
 ### Articles
-- `GET /api/articles` - List articles (paginated)
-- `GET /api/articles/trending` - Get trending articles
-- `GET /api/articles/search?q=query` - Search articles
-- `GET /api/articles/:id` - Get single article
-- `POST /api/articles` - Create article (auth required)
-- `PUT /api/articles/:id` - Update article (auth required)
-- `DELETE /api/articles/:id` - Delete article (auth required)
-- `POST /api/articles/:id/like` - Like/unlike article (auth required)
-- `POST /api/articles/:id/bookmark` - Bookmark/unbookmark article (auth required)
+- `GET /api/articles` — published only
+- `GET /api/articles/me?status=draft|published|archived`
+- `GET /api/articles/slug/:slug`
+- `GET /api/articles/:id`
+- `GET /api/articles/trending`
+- `GET /api/articles/search?q=`
+- `POST /api/articles` — creates draft
+- `PUT /api/articles/:id`
+- `DELETE /api/articles/:id`
+- `POST /api/articles/:id/publish|unpublish|archive`
+- `POST /api/articles/:id/like|bookmark`
 
-### Comments
-- `GET /api/articles/:id/comments` - Get article comments
-- `POST /api/articles/:id/comments` - Add comment (auth required)
-- `DELETE /api/articles/:id/comments/:commentId` - Delete comment (auth required)
+### Social
+- `GET /api/feed` — followed authors (auth required)
+- `GET /api/bookmarks`
+- Comments: `GET|POST|DELETE /api/articles/:id/comments`
 
-### Bookmarks
-- `GET /api/bookmarks` - Get user's bookmarked articles (auth required)
+### Teams (Phase 2)
+- `POST /api/teams`
+- `GET /api/teams/mine`
+- `GET /api/teams/slug/:slug`
+- `PUT /api/teams/:id`
+- `GET|POST|DELETE /api/teams/:id/members`
+- `POST /api/teams/:id/verify-request`
+
+### Admin
+- `GET /api/admin/verification-requests`
+- `POST /api/admin/verification-requests/:id/approve`
+- `POST /api/admin/verification-requests/:id/reject`
+
+Set a user's `role` to `super_admin` in the database for admin access.
+
+## Tests
+
+```bash
+go test ./services/state/...
+```
 
 ## Docker
-
-Build and run with Docker:
 
 ```bash
 docker build -t blog-backend .

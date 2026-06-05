@@ -1,8 +1,10 @@
 const TOKEN_STORAGE_KEY = 'auth_token';
+const REFRESH_STORAGE_KEY = 'auth_refresh_token';
 const TOKEN_COOKIE = 'auth_token';
-const TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days — matches JWT expiry
+const TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 let memoryToken: string | null = null;
+let memoryRefreshToken: string | null = null;
 
 function readCookieToken(): string | null {
   if (typeof document === 'undefined') return null;
@@ -26,7 +28,6 @@ function clearCookieToken() {
   document.cookie = `${TOKEN_COOKIE}=;path=/;max-age=0;SameSite=Lax`;
 }
 
-/** Persist JWT in memory, localStorage, and cookie (middleware reads cookie). */
 export function setAccessToken(token: string): void {
   if (!token?.trim()) return;
   memoryToken = token;
@@ -35,7 +36,6 @@ export function setAccessToken(token: string): void {
   writeCookieToken(token);
 }
 
-/** Read JWT — memory → localStorage → cookie, keeping stores in sync. */
 export function getAccessToken(): string | null {
   if (memoryToken) return memoryToken;
   if (typeof window === 'undefined') return null;
@@ -57,10 +57,30 @@ export function getAccessToken(): string | null {
   return null;
 }
 
+export function setRefreshToken(token: string): void {
+  if (!token?.trim()) return;
+  memoryRefreshToken = token;
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(REFRESH_STORAGE_KEY, token);
+}
+
+export function getRefreshToken(): string | null {
+  if (memoryRefreshToken) return memoryRefreshToken;
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(REFRESH_STORAGE_KEY);
+}
+
+export function setSessionTokens(accessToken: string, refreshToken: string): void {
+  setAccessToken(accessToken);
+  setRefreshToken(refreshToken);
+}
+
 export function clearAccessToken(): void {
   memoryToken = null;
+  memoryRefreshToken = null;
   if (typeof window === 'undefined') return;
   localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(REFRESH_STORAGE_KEY);
   clearCookieToken();
 }
 

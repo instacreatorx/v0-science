@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PROTECTED_PATHS = ['/settings'];
+const PROTECTED_PATHS = ['/settings', '/write', '/me', '/teams', '/admin'];
 const AUTH_PATHS = ['/sign-in', '/sign-up'];
 
 export function middleware(request: NextRequest) {
@@ -33,5 +33,13 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/settings/:path*', '/sign-in', '/sign-up'],
+  matcher: [
+    '/settings/:path*',
+    '/write/:path*',
+    '/me/:path*',
+    '/teams/:path*',
+    '/admin/:path*',
+    '/sign-in',
+    '/sign-up',
+  ],
 };

@@ -2,112 +2,92 @@ package middleware
 
 import (
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/kubektl/v0-blog-backend/models"
+	"github.com/kubektl/v0-blog-backend/services"
 )
 
-var jwtSecret []byte
-
-func init() {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "your-secret-key-change-in-production"
-	}
-	jwtSecret = []byte(secret)
+type AuthMiddleware struct {
+	auth *services.AuthService
 }
 
-func GetJWTSecret() []byte {
-	return jwtSecret
+func NewAuthMiddleware(auth *services.AuthService) *AuthMiddleware {
+	return &AuthMiddleware{auth: auth}
 }
 
-func AuthRequired() gin.HandlerFunc {
+func (m *AuthMiddleware) AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-			c.Abort()
-			return
-		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		if tokenString == authHeader {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
-			c.Abort()
-			return
-		}
-
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return jwtSecret, nil
-		})
-
-		if err != nil || !token.Valid {
+		userID, ok := m.parseToken(c)
+		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
 		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
-			c.Abort()
-			return
-		}
-
-		userID, ok := claims["user_id"].(float64)
-		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID in token"})
-			c.Abort()
-			return
-		}
-
-		c.Set("user_id", int64(userID))
+		c.Set("user_id", userID)
 		c.Next()
 	}
 }
 
-func OptionalAuth() gin.HandlerFunc {
+func (m *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.Next()
-			return
+		if userID, ok := m.parseToken(c); ok {
+			c.Set("user_id", userID)
 		}
+		c.Next()
+	}
+}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		if tokenString == authHeader {
-			c.Next()
-			return
-		}
-
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return jwtSecret, nil
-		})
-
-		if err != nil || !token.Valid {
-			c.Next()
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
+func (m *AuthMiddleware) SuperAdminRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, ok := m.parseToken(c)
 		if !ok {
-			c.Next()
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
 			return
 		}
+		c.Set("user_id", userID)
+		c.Next()
+	}
+}
 
-		userID, ok := claims["user_id"].(float64)
-		if ok {
-			c.Set("user_id", int64(userID))
+func (m *AuthMiddleware) parseToken(c *gin.Context) (int64, bool) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return 0, false
+	}
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenString == authHeader {
+		return 0, false
+	}
+	userID, err := services.ParseUserIDFromToken(tokenString, m.auth.JWTSecret())
+	if err != nil {
+		return 0, false
+	}
+	return userID, true
+}
+
+func GetOptionalUserID(c *gin.Context) int64 {
+	v, exists := c.Get("user_id")
+	if !exists {
+		return 0
+	}
+	id, ok := v.(int64)
+	if !ok {
+		return 0
+	}
+	return id
+}
+
+func RequireSuperAdmin(userService func(int64) (*models.User, error)) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, err := userService(c.GetInt64("user_id"))
+		if err != nil || user.Role != models.RoleSuperAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Super admin access required"})
+			c.Abort()
+			return
 		}
-
 		c.Next()
 	}
 }

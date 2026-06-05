@@ -3,35 +3,24 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Bookmark, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { VerifiedBadge } from "@/components/blog/verified-badge";
+import { articleHref, type ArticleCardData } from "@/lib/article-utils";
 
-export interface Article {
-  id: string;
-  title: string;
-  excerpt: string;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  publication?: string;
-  date: string;
-  readTime: string;
-  image?: string;
-  tags: string[];
-  isMemberOnly?: boolean;
-}
+export type { ArticleCardData as Article };
 
 interface ArticleCardProps {
-  article: Article;
+  article: ArticleCardData;
   variant?: "default" | "featured";
 }
 
 export async function ArticleCard({ article, variant = "default" }: ArticleCardProps) {
   const t = await getTranslations("common");
+  const href = articleHref(article);
 
   if (variant === "featured") {
     return (
       <article className="group relative overflow-hidden rounded-lg">
-        <Link href={`/article/${article.id}`} className="block">
+        <Link href={href} className="block">
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-muted">
             {article.image && (
               <Image
@@ -53,10 +42,13 @@ export async function ArticleCard({ article, variant = "default" }: ArticleCardP
                   />
                 </div>
                 <span className="text-sm font-medium">{article.author.name}</span>
-                {article.publication && (
+                {article.team && (
                   <>
                     <span className="text-sm opacity-60">{t("in")}</span>
-                    <span className="text-sm font-medium">{article.publication}</span>
+                    <span className="flex items-center gap-1 text-sm font-medium">
+                      {article.team.name}
+                      <VerifiedBadge verified={!!article.team.is_verified} />
+                    </span>
                   </>
                 )}
               </div>
@@ -97,14 +89,17 @@ export async function ArticleCard({ article, variant = "default" }: ArticleCardP
             />
           </div>
           <span className="text-sm font-medium text-foreground">{article.author.name}</span>
-          {article.publication && (
+          {article.team && (
             <>
               <span className="text-sm text-muted-foreground">{t("in")}</span>
-              <span className="text-sm font-medium text-foreground">{article.publication}</span>
+              <span className="flex items-center gap-1 text-sm font-medium text-foreground">
+                {article.team.name}
+                <VerifiedBadge verified={!!article.team.is_verified} />
+              </span>
             </>
           )}
         </div>
-        <Link href={`/article/${article.id}`} className="block">
+        <Link href={href} className="block">
           <h3 className="mb-1 font-serif text-lg font-bold leading-snug text-foreground group-hover:underline md:text-xl">
             {article.title}
           </h3>
@@ -137,7 +132,7 @@ export async function ArticleCard({ article, variant = "default" }: ArticleCardP
         </div>
       </div>
       {article.image && (
-        <Link href={`/article/${article.id}`} className="shrink-0">
+        <Link href={href} className="shrink-0">
           <div className="relative h-20 w-28 overflow-hidden rounded bg-muted md:h-28 md:w-40">
             <Image
               src={article.image}

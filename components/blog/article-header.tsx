@@ -1,15 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Article } from "@/components/blog/article-card";
-import { Button } from "@/components/ui/button";
-import { Bookmark, Share, MoreHorizontal, MessageCircle, ThumbsUp } from "lucide-react";
+import { VerifiedBadge } from "@/components/blog/verified-badge";
+import { ArticleActions } from "@/components/blog/article-actions";
+import { FollowAuthorButton } from "@/components/blog/follow-author-button";
+import type { ArticleCardData } from "@/lib/article-utils";
 
 interface ArticleHeaderProps {
-  article: Article;
+  article: ArticleCardData;
+  isFollowing?: boolean;
 }
 
-export async function ArticleHeader({ article }: ArticleHeaderProps) {
+export async function ArticleHeader({ article, isFollowing }: ArticleHeaderProps) {
   const t = await getTranslations("common");
 
   return (
@@ -20,7 +22,7 @@ export async function ArticleHeader({ article }: ArticleHeaderProps) {
       <p className="mb-6 text-lg text-muted-foreground md:text-xl">{article.excerpt}</p>
 
       <div className="mb-6 flex items-center gap-4">
-        <Link href="#" className="shrink-0">
+        <Link href={`/author/${article.author.id}`} className="shrink-0">
           <div className="relative h-12 w-12 overflow-hidden rounded-full bg-muted">
             <Image
               src={article.author.avatar}
@@ -32,14 +34,15 @@ export async function ArticleHeader({ article }: ArticleHeaderProps) {
         </Link>
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Link href="#" className="font-medium text-foreground hover:underline">
+            <Link href={`/author/${article.author.id}`} className="font-medium text-foreground hover:underline">
               {article.author.name}
             </Link>
-            {article.publication && (
+            {article.team && (
               <>
                 <span className="text-muted-foreground">{t("in")}</span>
-                <Link href="#" className="font-medium text-foreground hover:underline">
-                  {article.publication}
+                <Link href={`/team/${article.team.slug}`} className="flex items-center gap-1 font-medium text-foreground hover:underline">
+                  {article.team.name}
+                  <VerifiedBadge verified={!!article.team.is_verified} />
                 </Link>
               </>
             )}
@@ -58,38 +61,10 @@ export async function ArticleHeader({ article }: ArticleHeaderProps) {
             )}
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="hidden border-primary text-primary hover:bg-primary hover:text-primary-foreground sm:inline-flex"
-        >
-          {t("follow")}
-        </Button>
+        <FollowAuthorButton authorId={article.author.id} initialFollowing={isFollowing} />
       </div>
 
-      <div className="mb-8 flex items-center justify-between border-y border-border py-3">
-        <div className="flex items-center gap-4">
-          <button className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
-            <ThumbsUp className="h-5 w-5" />
-            <span className="text-sm">1.2K</span>
-          </button>
-          <button className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-sm">48</span>
-          </button>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-            <Bookmark className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-            <Share className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-            <MoreHorizontal className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
+      <ArticleActions article={article} />
 
       {article.image && (
         <div className="relative mb-8 aspect-[16/9] w-full overflow-hidden rounded-sm bg-muted">

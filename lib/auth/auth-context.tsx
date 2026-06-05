@@ -13,7 +13,8 @@ import {
   AUTH_SESSION_EXPIRED_EVENT,
   clearAccessToken,
   getAccessToken,
-  setAccessToken,
+  getRefreshToken,
+  setSessionTokens,
 } from '@/lib/auth/session';
 import { isApiError } from '@/lib/auth/api-client';
 import { syncLocaleFromProfile } from '@/lib/locale';
@@ -22,8 +23,8 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
-  logout: () => void;
+  login: (token: string, refreshToken: string, user: User) => void;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<User | null>;
 }
 
@@ -46,11 +47,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return currentUser;
     } catch (error) {
       if (isApiError(error) && error.status === 401) {
+        const refreshToken = getRefreshToken();
+        if (refreshToken) {
+          try {
+            const response = await authApi.refresh(refreshToken);
+            setSessionTokens(response.token, response.refresh_token);
+            setUser(response.user);
+            return response.user;
+          } catch {
+            clearAccessToken();
+            setUser(null);
+            return null;
+          }
+        }
         clearAccessToken();
         setUser(null);
         return null;
       }
-      // Network/server errors: keep token, don't force logout
       setUser(null);
       return null;
     }
@@ -85,13 +98,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.locale]);
 
-  const login = useCallback((token: string, loggedInUser: User) => {
-    setAccessToken(token);
+  const login = useCallback((token: string, refreshToken: string, loggedInUser: User) => {
+    setSessionTokens(token, refreshToken);
     setUser(loggedInUser);
     syncLocaleFromProfile(loggedInUser.locale);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await authApi.logout(refreshToken);
+      } catch {
+        // Clear local session even if server logout fails
+      }
+    }
     clearAccessToken();
     setUser(null);
   }, []);

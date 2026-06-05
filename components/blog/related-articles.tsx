@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Article } from "@/components/blog/article-card";
+import { articleHref, type ArticleCardData } from "@/lib/article-utils";
 
 interface RelatedArticlesProps {
-  articles: Article[];
+  articles: ArticleCardData[];
 }
 
 export async function RelatedArticles({ articles }: RelatedArticlesProps) {
@@ -16,8 +16,8 @@ export async function RelatedArticles({ articles }: RelatedArticlesProps) {
       <h2 className="mb-6 font-serif text-xl font-bold text-foreground">{t("moreFromThoughts")}</h2>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {articles.map((article) => (
-          <article key={article.id} className="group">
-            <Link href={`/article/${article.id}`}>
+          <article key={article.numericId} className="group">
+            <Link href={articleHref(article)}>
               {article.image && (
                 <div className="relative mb-3 aspect-[4/3] w-full overflow-hidden rounded bg-muted">
                   <Image
