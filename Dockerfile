@@ -1,11 +1,13 @@
 # Multi-stage Dockerfile for Next.js (production)
-FROM node:18-bullseye AS deps
+# Changed base image to node:20-bullseye to satisfy Next.js requirements
+FROM node:20-bullseye AS deps
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json* ./
 RUN npm ci  --include=dev --no-audit --no-fund 
 
-FROM node:18-bullseye AS builder
+# Changed base image to node:20-bullseye
+FROM node:20-bullseye AS builder
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -24,7 +26,8 @@ COPY . .
 # RUN npx prisma generate
 RUN npm run build
 
-FROM node:18-bullseye AS runner
+# Changed base image to node:20-bullseye
+FROM node:20-bullseye AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
