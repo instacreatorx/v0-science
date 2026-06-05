@@ -1,7 +1,7 @@
 'use client';
 
 import { NextIntlClientProvider } from 'next-intl';
-import { AuthProvider } from '@/lib/auth-context';
+import { AuthProvider } from '@/lib/auth/auth-context';
 import { Toaster } from '@/components/ui/sonner';
 
 interface ProvidersProps {

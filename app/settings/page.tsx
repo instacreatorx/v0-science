@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Header } from '@/components/blog/header';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,23 +15,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { authApi } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/auth/auth-context';
 import { setLocalePreference } from '@/lib/locale';
 import { locales, localeNames, type Locale } from '@/i18n/config';
 import { Loader2 } from 'lucide-react';
 
-export default function SettingsPage() {
+function SettingsContent() {
   const t = useTranslations('settings');
-  const { user, isLoading, isAuthenticated, refreshUser } = useAuth();
-  const router = useRouter();
+  const { user, refreshUser } = useAuth();
   const [selectedLocale, setSelectedLocale] = useState<Locale>('en');
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/sign-in');
-    }
-  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (user?.locale && (user.locale === 'en' || user.locale === 'fa')) {
@@ -53,14 +46,6 @@ export default function SettingsPage() {
       setIsSaving(false);
     }
   };
-
-  if (isLoading || !isAuthenticated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,5 +80,13 @@ export default function SettingsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <ProtectedRoute>
+      <SettingsContent />
+    </ProtectedRoute>
   );
 }

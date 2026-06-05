@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Phone, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/auth/auth-context';
+import { getAccessToken } from '@/lib/auth/session';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +22,7 @@ export function PhoneAuthForm({ mode }: PhoneAuthFormProps) {
   const t = useTranslations('auth');
   const tCommon = useTranslations('common');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
 
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
@@ -81,9 +83,18 @@ export function PhoneAuthForm({ mode }: PhoneAuthFormProps) {
           code,
           name: mode === 'sign-up' ? name.trim() : undefined,
         });
+        if (!response.token) {
+          throw new Error(t('authError'));
+        }
+
         login(response.token, response.user);
-        router.push('/');
-        router.refresh();
+
+        if (!getAccessToken()) {
+          throw new Error(t('authError'));
+        }
+
+        const redirect = searchParams.get('redirect');
+        router.replace(redirect && redirect.startsWith('/') ? redirect : '/');
       } catch (error) {
         toast.error(error instanceof Error ? error.message : t('authError'));
         setOtp('');
@@ -91,7 +102,7 @@ export function PhoneAuthForm({ mode }: PhoneAuthFormProps) {
         setIsLoading(false);
       }
     },
-    [phone, name, mode, login, router, t]
+    [phone, name, mode, login, router, searchParams, t]
   );
 
   useEffect(() => {

@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Bell, PenLine, Settings, LogOut } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/lib/auth/auth-context";
 
 export function Header() {
   const t = useTranslations("header");
