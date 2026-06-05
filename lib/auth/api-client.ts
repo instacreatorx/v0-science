@@ -27,8 +27,8 @@ interface RequestOptions {
 }
 
 function resolveApiBaseUrl(): string {
- 
-  return process.env.NEXT_PUBLIC_API_URL+'/api' || 'http://localhost:8080/api';
+  const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+  return `${base}/api`;
 }
 
 export async function apiRequest<T>(
@@ -55,7 +55,7 @@ export async function apiRequest<T>(
       method,
       headers: requestHeaders,
       body: body ? JSON.stringify(body) : undefined,
-      credentials: 'same-origin',
+      credentials: 'omit',
       cache: 'no-store',
     });
   } catch {

@@ -53,18 +53,13 @@ func main() {
 	h := handlers.NewHandlers(authService, userService, articleService, socialService, teamService)
 	authMW := middleware.NewAuthMiddleware(authService)
 
-	r := gin.Default()
-	// r.Use(cors.New(cors.Config{
-	// 	AllowOriginFunc: func(origin string) bool {
-	// 		return cfg.IsAllowedOrigin(origin)
-	// 	},
-	// 	AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-	// 	AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-	// 	ExposeHeaders:    []string{"Content-Length"},
-	// 	AllowCredentials: true,
-	// }))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, "Accept", "Authorization")
 
-	r.Use(cors.Default())
+	r := gin.New()
+	r.Use(cors.New(corsConfig))
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
@@ -137,7 +132,7 @@ func main() {
 		}
 	}
 
-	log.Printf("Server starting on port %s (CORS origins: %v)", cfg.Port, cfg.CORSOrigins)
+	log.Printf("Server starting on port %s (CORS: allow all origins)", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
