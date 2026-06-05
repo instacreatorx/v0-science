@@ -27,8 +27,8 @@ interface RequestOptions {
 }
 
 function resolveApiBaseUrl(): string {
-
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+ 
+  return process.env.NEXT_PUBLIC_API_URL+'/api' || 'http://localhost:8080/api';
 }
 
 export async function apiRequest<T>(
