@@ -34,10 +34,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/.moz/standalone ./
-COPY --from=builder /app/.moz/static ./.moz/static
+COPY --from=builder /app/public ./public 
+# 2. Copy the standalone folder contents directly into /app
+COPY --from=builder /app/.next/standalone ./
+# 3. Copy the static assets INTO the .next folder where the standalone server expects them
+COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
 EXPOSE 5555
