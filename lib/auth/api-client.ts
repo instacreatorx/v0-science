@@ -27,10 +27,7 @@ interface RequestOptions {
 }
 
 function resolveApiBaseUrl(): string {
-  // Same-origin proxy avoids CORS and keeps auth headers reliable in production.
-  if (typeof window !== 'undefined') {
-    return '/api/backend';
-  }
+
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 }
 
